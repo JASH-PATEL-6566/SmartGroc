@@ -1,0 +1,14 @@
+services:
+  api:
+    container_name: SmartGroc-Backend
+    build:
+      context: "./Backend"
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGO_URI=mongodb+srv://SmartGroc:SmartGroc%40jaH%401511@smartgroc.nqhga.mongodb.net/?retryWrites=true&w=majority&appName=SmartGroc
+      - PORT=8000
+    volumes:
+      - ./Backend:/app
+      - /app/node_modules
