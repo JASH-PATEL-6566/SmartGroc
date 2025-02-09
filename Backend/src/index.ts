@@ -7,9 +7,9 @@ import { expressMiddleware } from "@apollo/server/express4";
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
 import dotenv from "dotenv";
 
-import typeDefs from "./graphql/typeDefs";
-import resolvers from "./graphql/resolvers";
-import connectDB from "./db/contectDB";
+import typeDefs from "./graphql/typeDefs/index.js";
+import resolvers from "./graphql/resolvers/index.js";
+import connectDB from "./db/contectDB.js";
 
 async function startServer() {
   dotenv.config();

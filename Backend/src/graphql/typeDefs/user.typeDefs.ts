@@ -7,6 +7,9 @@ const userTypeDefs = `#graphql
         email: String!
         password: String!
         profilePicture: String
+        dietary_prep: [String!]
+        allergic_to: [String!]
+        token: String
     }
 
     # User queries
@@ -15,10 +18,16 @@ const userTypeDefs = `#graphql
         getUser(id: ID!): User
     }
 
+    # Response Types
+    type AuthPayload{
+        token: String!
+        user: User
+    }
+
     # User mutations
     type Mutation {
         signup(input: SignupInput): User
-        login(input: LoginInput): User
+        login(input: LoginInput): AuthPayload
         updateUser(input: UpdateUserInput): User
     }
 
@@ -41,6 +50,8 @@ const userTypeDefs = `#graphql
         password: String
         profilePicture: String
     }
+
+    
 `;
 
 export default userTypeDefs;

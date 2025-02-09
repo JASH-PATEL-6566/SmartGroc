@@ -18,7 +18,20 @@ const userSchema = new mongoose.Schema(
     },
     profilePicture: {
       type: String,
+      default: "https://avatar.iran.liara.run/public/14",
     },
+    dietary_prep:{
+      type: [String!],
+      default: []
+    },
+    allergic_to:{
+      type: [String!],
+      default: []
+    },
+    token:{
+      type: String,
+      default: null
+    }
   },
   { timestamps: true }
 );
