@@ -15,8 +15,10 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { loginWithEmailPassword } from "../../utils/auth";
-import Icon from "react-native-vector-icons/Feather";
+import Feather from "@expo/vector-icons/Feather";
 import Input from "@/components/Input";
+import PasswordInput from "@/components/PasswordInput";
+import Button from "@/components/Button";
 
 const { width, height } = Dimensions.get("window");
 
@@ -61,29 +63,23 @@ export default function Login() {
                   keyboardType="email-address"
                 />
 
-                <Text style={styles.label}>Password</Text>
-                <View style={styles.passwordContainer}>
-                  <TextInput
-                    style={styles.inputPassword}
-                    autoCapitalize="none"
-                    placeholderTextColor="gray"
-                    placeholder="••••••••"
-                    secureTextEntry={!showPassword}
-                    value={password}
-                    onChangeText={setPassword}
-                  />
-                  <TouchableOpacity
-                    onPress={() => setShowPassword(!showPassword)}
-                    style={styles.iconContainer}
-                  >
-                    <Icon
-                      name={showPassword ? "eye" : "eye-off"}
-                      size={20}
-                      color="#555"
-                    />
-                  </TouchableOpacity>
-                </View>
+                <PasswordInput
+                  password={password}
+                  setPassword={setPassword}
+                  showPassword={showPassword}
+                  setShowPassword={setShowPassword}
+                />
 
+                {/* <Button
+                  loading={loading}
+                  onPress={handleLogin}
+                  loadingText="Logging in..."
+                  text="Sign In"
+                  textColor="#fff"
+                  color="#28a745"
+                  marginTop={20}
+                />
+                 */}
                 <TouchableOpacity
                   style={styles.loginButton}
                   onPress={handleLogin}
@@ -151,51 +147,6 @@ const styles = StyleSheet.create({
     color: "gray",
     marginBottom: 20,
   },
-  label: {
-    fontSize: 14,
-    fontWeight: "bold",
-    marginTop: 10,
-  },
-  input: {
-    width: "100%",
-    height: 50,
-    borderWidth: 1,
-    borderColor: "#dcdcdc",
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    marginTop: 5,
-    backgroundColor: "#f9f9f9",
-  },
-  passwordContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    width: "100%",
-    backgroundColor: "#f9f9f9",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#dcdcdc",
-    marginTop: 5,
-  },
-  inputPassword: {
-    flex: 1,
-    padding: 15,
-  },
-  iconContainer: {
-    padding: 10,
-  },
-  loginButton: {
-    backgroundColor: "#28a745",
-    width: "100%",
-    paddingVertical: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginTop: 20,
-  },
-  loginText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
   switchContainer: {
     marginTop: 15,
     flexDirection: "row",
@@ -211,5 +162,19 @@ const styles = StyleSheet.create({
     color: "#007bff",
     fontWeight: "bold",
     fontSize: 16,
+  },
+
+  loginButton: {
+    backgroundColor: "#28a745",
+    width: "100%",
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 20,
+  },
+  loginText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });

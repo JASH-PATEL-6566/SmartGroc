@@ -1,9 +1,9 @@
 import { Stack } from "expo-router";
 
-export default function MainStack() {
+export default function ScanLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="scan" />
     </Stack>
   );
 }

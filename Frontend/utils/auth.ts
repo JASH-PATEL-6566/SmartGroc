@@ -4,10 +4,7 @@ import {
   signOut,
   createUserWithEmailAndPassword,
   updateProfile,
-  onAuthStateChanged,
 } from "firebase/auth";
-import { store } from "../redux/store";
-import { setUser } from "../redux/authSlice";
 
 // login user with email and password
 export const loginWithEmailPassword = async (

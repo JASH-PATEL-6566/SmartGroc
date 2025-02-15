@@ -7,7 +7,6 @@ import {
   StyleSheet,
   ImageBackground,
   Dimensions,
-  Pressable,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -16,9 +15,9 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { signUpWithEmailPassword } from "../../utils/auth";
-import Icon from "react-native-vector-icons/Feather";
-import { LinearGradient } from "expo-linear-gradient";
 import Input from "@/components/Input";
+import PasswordInput from "@/components/PasswordInput";
+import Button from "@/components/Button";
 
 const { width, height } = Dimensions.get("window");
 
@@ -71,37 +70,22 @@ export default function Signup() {
                 autoCapitalize="none"
               />
 
-              <Text style={styles.label}>Password</Text>
-              <View style={styles.passwordContainer}>
-                <TextInput
-                  style={styles.inputPassword}
-                  autoCapitalize="none"
-                  placeholder="••••••••"
-                  secureTextEntry={!showPassword}
-                  value={password}
-                  onChangeText={setPassword}
-                />
-                <TouchableOpacity
-                  onPress={() => setShowPassword(!showPassword)}
-                  style={styles.iconContainer}
-                >
-                  <Icon
-                    name={showPassword ? "eye" : "eye-off"}
-                    size={20}
-                    color="#555"
-                  />
-                </TouchableOpacity>
-              </View>
+              <PasswordInput
+                password={password}
+                setPassword={setPassword}
+                showPassword={showPassword}
+                setShowPassword={setShowPassword}
+              />
 
-              <TouchableOpacity
-                style={styles.signupButton}
+              <Button
+                color="#28a745"
+                loading={loading}
                 onPress={handleSignup}
-                disabled={loading}
-              >
-                <Text style={styles.signupText}>
-                  {loading ? "Creating..." : "Create Account"}
-                </Text>
-              </TouchableOpacity>
+                loadingText="Signing up..."
+                text="Sign Up"
+                textColor="#fff"
+                marginTop={20}
+              />
 
               <View style={styles.switchContainer}>
                 <Text style={styles.switchText}>
@@ -155,51 +139,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "gray",
     marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "bold",
-    marginTop: 10,
-  },
-  input: {
-    width: "100%",
-    height: 50,
-    borderWidth: 1,
-    borderColor: "#dcdcdc",
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    marginTop: 5,
-    backgroundColor: "#f9f9f9",
-  },
-  passwordContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    width: "100%",
-    backgroundColor: "#f9f9f9",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#dcdcdc",
-    marginTop: 5,
-  },
-  inputPassword: {
-    flex: 1,
-    padding: 15,
-  },
-  iconContainer: {
-    padding: 10,
-  },
-  signupButton: {
-    backgroundColor: "#28a745",
-    width: "100%",
-    paddingVertical: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginTop: 20,
-  },
-  signupText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
   },
   switchContainer: {
     marginTop: 15,

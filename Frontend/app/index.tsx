@@ -12,6 +12,7 @@ import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../config/firebaseConfig";
+import Button from "@/components/Button";
 
 const { width, height } = Dimensions.get("window");
 
@@ -45,7 +46,7 @@ export default function Welcome() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        router.replace("/(main)/home");
+        router.replace("/(main)/(tabs)/home");
       }
     });
     return () => unsubscribe();
@@ -92,18 +93,19 @@ export default function Welcome() {
 
       {currentIndex === slides.length - 1 && (
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.getStartedButton}
+          <Button
+            color="#28a745"
             onPress={() => router.push("/(auth)/signup")}
-          >
-            <Text style={styles.getStartedText}>Get Started</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.loginButton}
+            text="Get Started"
+            textColor="#fff"
+            marginBottom={15}
+          />
+          <Button
+            color="#dcdcdc"
             onPress={() => router.push("/(auth)/login")}
-          >
-            <Text style={styles.loginText}>Login</Text>
-          </TouchableOpacity>
+            text="Log In"
+            textColor="#000"
+          />
         </View>
       )}
     </LinearGradient>
@@ -166,30 +168,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 50,
     alignItems: "center",
-  },
-  getStartedButton: {
-    backgroundColor: "#28a745",
-    width: "90%",
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  getStartedText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  loginButton: {
-    borderWidth: 1,
-    borderColor: "#dcdcdc",
-    width: "90%",
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  loginText: {
-    fontSize: 18,
-    fontWeight: "bold",
+    paddingHorizontal: 20,
   },
 });

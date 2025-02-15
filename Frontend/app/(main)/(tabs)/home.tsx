@@ -2,8 +2,8 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { useDispatch } from "react-redux";
-import { logout } from "../../utils/auth";
-import { setUser } from "../../redux/authSlice";
+import { logout } from "../../../utils/auth";
+import { setUser } from "../../../redux/authSlice";
 
 export default function Home() {
   const router = useRouter();
@@ -12,7 +12,7 @@ export default function Home() {
   const handleLogout = async () => {
     await logout();
     dispatch(setUser(null));
-    router.replace("/(auth)/login"); // Redirect after logout
+    router.replace("/(auth)/login");
   };
 
   return (

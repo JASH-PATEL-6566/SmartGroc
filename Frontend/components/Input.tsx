@@ -20,6 +20,7 @@ const Input = (prop: {
         placeholderTextColor="gray"
         value={prop.value}
         onChangeText={prop.setValue}
+        autoCorrect={false}
       />
     </>
   );
