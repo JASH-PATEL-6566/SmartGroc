@@ -20,31 +20,35 @@ import { NUTRIENT_MAP } from "@/constants/nutritions";
 import { COLOR_CONST } from "@/constants/color";
 import { logout } from "@/utils/auth";
 import Button from "@/components/Button";
+import {
+  arrayRemove,
+  arrayUnion,
+  doc,
+  getDoc,
+  updateDoc,
+} from "firebase/firestore";
+import { db } from "@/config/firebaseConfig";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
-const STORAGE_KEY = "@nutritional_preferences";
-
-const saveNutritionalPreferences = async (preferences: string[]) => {
+const loadDietaryPreferences = async (uid: string): Promise<string[]> => {
   try {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
-  } catch (e) {
-    console.error("Failed to save nutritional preferences to AsyncStorage", e);
-  }
-};
+    if (!uid) {
+      console.error("No UID found in AsyncStorage");
+      return [];
+    }
 
-const resetNutritionalPreferences = async () => {
-  try {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-  } catch (e) {
-    console.error("Failed to reset nutritional preferences to AsyncStorage", e);
-  }
-};
+    const userRef = doc(db, "users", uid);
+    const userSnap = await getDoc(userRef);
 
-const loadDietaryPreferences = async (): Promise<string[]> => {
-  try {
-    const value = await AsyncStorage.getItem(STORAGE_KEY);
-    return value ? JSON.parse(value) : [];
-  } catch (e) {
-    console.error("Failed to load dietary preferences from AsyncStorage", e);
+    if (userSnap.exists()) {
+      return userSnap.data().nutritional_preferences || []; // Return array from Firestore
+    } else {
+      console.error("User document not found");
+      return [];
+    }
+  } catch (error) {
+    console.error("Failed to load dietary preferences from Firestore", error);
     return [];
   }
 };
@@ -71,6 +75,7 @@ export default function Profile() {
   const [nutritionalPreferences, setNutritionalPreferences] = useState<
     string[]
   >([]);
+  const { uid } = useSelector((state: RootState) => state.auth.user);
 
   const renderInputModal = () => {
     return (
@@ -115,62 +120,86 @@ export default function Profile() {
   };
 
   useEffect(() => {
-    loadDietaryPreferences().then(setNutritionalPreferences);
+    loadDietaryPreferences(uid).then(setNutritionalPreferences);
   }, []);
 
   const filteredNutrients = NUTRIENT_MAP.filter((nutrient) =>
     nutrient.name.toLowerCase().includes(inputValue.toLowerCase())
   );
 
-  const addPreference = (preference: string) => {
+  const addPreference = async (preference: string) => {
     if (!nutritionalPreferences.includes(preference)) {
       const newPreferences = [...nutritionalPreferences, preference];
       setNutritionalPreferences(newPreferences);
-      saveNutritionalPreferences(newPreferences);
+
+      try {
+        if (uid) {
+          const userRef = doc(db, "users", uid);
+          await updateDoc(userRef, {
+            nutritional_preferences: arrayUnion(preference), // Add to Firestore array
+          });
+        }
+      } catch (error) {
+        console.error("Error updating nutritional preferences:", error);
+      }
     }
     setInputValue("");
     setShowInput(false);
   };
 
-  const resetPreferences = () => {
+  const resetPreferences = async () => {
     Alert.alert(
-      "Confirmation !",
-      "Do you really want to reset nutritional prefrence?",
+      "Confirmation!",
+      "Do you really want to reset nutritional preferences?",
       [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
+        { text: "Cancel", style: "cancel" },
         {
           text: "OK",
           style: "destructive",
-          onPress: () => {
+          onPress: async () => {
             setNutritionalPreferences([]);
-            resetNutritionalPreferences();
+
+            try {
+              if (uid) {
+                const userRef = doc(db, "users", uid);
+                await updateDoc(userRef, {
+                  nutritional_preferences: [], // Reset Firestore array
+                });
+              }
+            } catch (error) {
+              console.error("Error resetting nutritional preferences:", error);
+            }
           },
         },
       ]
     );
   };
 
-  const removePreference = (preference: string) => {
+  const removePreference = async (preference: string) => {
     Alert.alert(
-      "Confirmation !",
-      "Do you really want to remove this nutritional prefrence?",
+      "Confirmation!",
+      "Do you really want to remove this nutritional preference?",
       [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
+        { text: "Cancel", style: "cancel" },
         {
           text: "OK",
           style: "destructive",
-          onPress: () => {
+          onPress: async () => {
             const newPreferences = nutritionalPreferences.filter(
               (pref) => pref !== preference
             );
             setNutritionalPreferences(newPreferences);
-            saveNutritionalPreferences(newPreferences);
+
+            try {
+              if (uid) {
+                const userRef = doc(db, "users", uid);
+                await updateDoc(userRef, {
+                  nutritional_preferences: arrayRemove(preference), // Remove from Firestore array
+                });
+              }
+            } catch (error) {
+              console.error("Error removing nutritional preference:", error);
+            }
           },
         },
       ]

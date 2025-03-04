@@ -548,6 +548,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { COLOR_CONST } from "@/constants/color";
 import { db, storage } from "@/config/firebaseConfig";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 type ReceiptFile = {
   uri: string;
@@ -575,6 +577,7 @@ export default function ConfirmOrder() {
   const [mapRegion, setMapRegion] = useState<MapRegion | null>(null);
   const [currentLocation, setCurrentLocation] =
     useState<Location.LocationObject | null>(null);
+  const { uid } = useSelector((state: RootState) => state.auth.user);
 
   useEffect(() => {
     loadProducts();
@@ -710,7 +713,7 @@ export default function ConfirmOrder() {
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        aspect: [4, 3],
+        // aspect: [4, 3],
         quality: 1,
       });
 
@@ -730,7 +733,7 @@ export default function ConfirmOrder() {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        aspect: [4, 3],
+        // aspect: [4, 3],
         quality: 1,
       });
 
@@ -744,9 +747,8 @@ export default function ConfirmOrder() {
       Alert.alert("Error", "Failed to pick image. Please try again.");
     }
   };
-
   const extractGrandTotal = async (imageUri: string) => {
-    setIsLoading(true);
+    // setIsLoading(true);
     try {
       const formData = new FormData();
 
@@ -773,7 +775,6 @@ export default function ConfirmOrder() {
       );
 
       const data = await response.json();
-      console.log(data);
 
       if (data.total_amount) {
         setGrandTotal(data.total_amount.toString());
@@ -794,14 +795,69 @@ export default function ConfirmOrder() {
     }
   };
 
+  // const handleSubmit = async () => {
+  //   if (!location) {
+  //     Alert.alert("Error", "Please provide a store location");
+  //     return;
+  //   }
+
+  //   if (!receipt) {
+  //     Alert.alert("Error", "Please upload a receipt");
+  //     return;
+  //   }
+
+  //   if (!grandTotal) {
+  //     Alert.alert("Error", "Please provide the grand total");
+  //     return;
+  //   }
+
+  //   setIsLoading(true);
+
+  //   try {
+  //     // Create a blob from the receipt URI
+  //     const response = await fetch(receipt);
+  //     const blob = await response.blob();
+
+  //     // Upload receipt to Firebase Storage
+  //     const storageRef = ref(storage, `receipts/${Date.now()}.jpg`);
+  //     await uploadBytes(storageRef, blob);
+  //     const receiptUrl = await getDownloadURL(storageRef);
+
+  //     // Save purchase to Firestore
+  //     const purchaseData = {
+  //       products,
+  //       location: {
+  //         latitude: location.coords.latitude,
+  //         longitude: location.coords.longitude,
+  //       },
+  //       storeAddress: storeAddress,
+  //       receiptUrl,
+  //       grandTotal: Number.parseFloat(grandTotal),
+  //       timestamp: new Date(),
+  //     };
+
+  //     await addDoc(collection(db, "purchases"), purchaseData);
+
+  //     // Clear cart
+  //     await AsyncStorage.setItem("@scanned_products", JSON.stringify([]));
+
+  //     Alert.alert("Success", "Purchase recorded successfully!", [
+  //       {
+  //         text: "OK",
+  //         onPress: () => router.replace("/(main)/(tabs)/(scan)/Scan"),
+  //       },
+  //     ]);
+  //   } catch (error) {
+  //     console.error("Error recording purchase:", error);
+  //     Alert.alert("Error", "Failed to record purchase. Please try again.");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
   const handleSubmit = async () => {
     if (!location) {
       Alert.alert("Error", "Please provide a store location");
-      return;
-    }
-
-    if (!receipt) {
-      Alert.alert("Error", "Please upload a receipt");
       return;
     }
 
@@ -813,29 +869,49 @@ export default function ConfirmOrder() {
     setIsLoading(true);
 
     try {
-      // Create a blob from the receipt URI
-      const response = await fetch(receipt);
-      const blob = await response.blob();
+      // Get user UID from AsyncStorage
 
+      if (!uid) {
+        Alert.alert("Error", "User not found");
+        return;
+      }
+
+      let receiptUrl = "";
+      // if (receipt) {
+      //   const response = await fetch(receipt);
+      //   const blob = await response.blob();
+      //   const storageRef = ref(storage, `receipts/${uid}/${Date.now()}.jpg`);
+      //   await uploadBytes(storageRef, blob);
+      //   receiptUrl = await getDownloadURL(storageRef);
+      // }
       // Upload receipt to Firebase Storage
-      const storageRef = ref(storage, `receipts/${Date.now()}.jpg`);
-      await uploadBytes(storageRef, blob);
-      const receiptUrl = await getDownloadURL(storageRef);
 
-      // Save purchase to Firestore
+      // Reference to user's purchase collection
+      const userPurchaseRef = collection(db, "users", uid, "purchase");
+
+      // Save purchase document
       const purchaseData = {
-        products,
         location: {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
         },
-        storeAddress: storeAddress,
+        storeAddress,
         receiptUrl,
         grandTotal: Number.parseFloat(grandTotal),
         timestamp: new Date(),
       };
 
-      await addDoc(collection(db, "purchases"), purchaseData);
+      const purchaseDocRef = await addDoc(userPurchaseRef, purchaseData);
+
+      // Reference to products collection within the purchase document
+      const productsRef = collection(purchaseDocRef, "products");
+
+      // Store entire product objects inside the products subcollection
+      const productPromises = products.map(
+        (product) => addDoc(productsRef, product) // Store full product object
+      );
+
+      await Promise.all(productPromises);
 
       // Clear cart
       await AsyncStorage.setItem("@scanned_products", JSON.stringify([]));
