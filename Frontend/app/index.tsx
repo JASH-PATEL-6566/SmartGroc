@@ -13,6 +13,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../config/firebaseConfig";
 import Button from "@/components/Button";
+import { COLOR_CONST } from "@/constants/color";
 
 const { width, height } = Dimensions.get("window");
 
@@ -94,7 +95,7 @@ export default function Welcome() {
       {currentIndex === slides.length - 1 && (
         <View style={styles.buttonContainer}>
           <Button
-            color="#28a745"
+            color={COLOR_CONST.light_green}
             onPress={() => router.push("/(auth)/signup")}
             text="Get Started"
             textColor="#fff"
@@ -161,7 +162,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   activeDot: {
-    backgroundColor: "#28a745",
+    backgroundColor: COLOR_CONST.light_green,
   },
   buttonContainer: {
     width: "100%",

@@ -1,56 +1,41 @@
+import {
+  View,
+  Text,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  ScrollView,
+} from "react-native";
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { useRouter } from "expo-router";
-import { useDispatch } from "react-redux";
-import { logout } from "../../../utils/auth";
-import { setUser } from "../../../redux/authSlice";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
+import TopHeader from "@/components/home/topHeader";
+import WhiteBackView from "@/components/home/WhiteBackView";
+import SafeAreaViewBackground from "@/components/SafeAreaViewBackground";
 
-export default function Home() {
-  const router = useRouter();
-  const dispatch = useDispatch();
-
-  const handleLogout = async () => {
-    await logout();
-    dispatch(setUser(null));
-    router.replace("/(auth)/login");
-  };
+const Home = () => {
+  const user = useSelector((state: RootState) => state.auth.user);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome to the Home Page</Text>
-
-      <TouchableOpacity style={styles.button} onPress={handleLogout}>
-        <Text style={styles.buttonText}>Logout</Text>
-      </TouchableOpacity>
-    </View>
+    <SafeAreaViewBackground>
+      <StatusBar hidden={false} />
+      {/* <TopHeader user={user} /> */}
+      <ScrollView style={styles.container}>
+        <TopHeader user={user} />
+        <WhiteBackView heading="Expiring Soon" next="next/page" />
+        <WhiteBackView heading="Recipe Suggestions" next="next/page" />
+        <WhiteBackView heading="abc" next="next/page" marginBottom={20} />
+      </ScrollView>
+    </SafeAreaViewBackground>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    color: "#333",
-  },
-  button: {
-    backgroundColor: "#dc3545",
-    padding: 12,
-    borderRadius: 8,
-    width: "90%",
-    alignItems: "center",
-    marginTop: 10,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    // marginBottom: 20,
   },
 });
+
+export default Home;

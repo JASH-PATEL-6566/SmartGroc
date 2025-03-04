@@ -1,8 +1,10 @@
 // redux/authSlice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
+export type User = any;
+
 interface AuthState {
-  user: any;
+  user: User;
 }
 
 const initialState: AuthState = {

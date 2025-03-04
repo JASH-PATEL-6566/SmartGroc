@@ -24,6 +24,7 @@ export const useAuth = () => {
         router.replace("/(main)/(tabs)/home");
       } else {
         dispatch(setUser(null));
+        router.replace("/(auth)/login");
       }
     });
     return () => unsubscribe();

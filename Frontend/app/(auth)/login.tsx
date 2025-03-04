@@ -15,10 +15,8 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { loginWithEmailPassword } from "../../utils/auth";
-import Feather from "@expo/vector-icons/Feather";
 import Input from "@/components/Input";
 import PasswordInput from "@/components/PasswordInput";
-import Button from "@/components/Button";
 
 const { width, height } = Dimensions.get("window");
 

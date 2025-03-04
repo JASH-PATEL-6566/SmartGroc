@@ -36,7 +36,10 @@ export default function TabLayout() {
       <Tabs.Screen name="receipe" />
       <Tabs.Screen name="(scan)" options={{ title: "scan" }} />
       <Tabs.Screen name="list" />
-      <Tabs.Screen name="profile" />
+      <Tabs.Screen
+        name="profile"
+        options={{ headerTitle: "Profile & Preferences", headerShown: true }}
+      />
     </Tabs>
   );
 }
