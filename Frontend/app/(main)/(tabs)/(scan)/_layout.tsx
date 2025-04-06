@@ -4,7 +4,6 @@ export default function ScanLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }} initialRouteName="Scan">
       <Stack.Screen name="scan" />
-      <Stack.Screen name="productDetails" options={{ presentation: "modal" }} />
       <Stack.Screen name="cart" options={{ headerShown: false }} />
       <Stack.Screen
         name="confirmPurchase"

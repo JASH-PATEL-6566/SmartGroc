@@ -11,14 +11,14 @@ export default function TabLayout() {
 
           if (route.name === "home") {
             iconName = focused ? "home" : "home-outline";
-          } else if (route.name === "receipe") {
-            iconName = focused ? "food" : "food-outline";
           } else if (route.name === "(scan)") {
             iconName = "barcode-scan";
           } else if (route.name === "list") {
             iconName = "format-list-bulleted";
           } else if (route.name === "profile") {
             iconName = focused ? "account" : "account-outline";
+          } else if (route.name === "map") {
+            iconName = focused ? "map" : "map-outline";
           } else {
             iconName = "help-circle";
           }
@@ -33,7 +33,7 @@ export default function TabLayout() {
       })}
     >
       <Tabs.Screen name="home" />
-      <Tabs.Screen name="receipe" />
+      <Tabs.Screen name="map" options={{ title: "Map" }} />
       <Tabs.Screen name="(scan)" options={{ title: "scan" }} />
       <Tabs.Screen name="list" />
       <Tabs.Screen

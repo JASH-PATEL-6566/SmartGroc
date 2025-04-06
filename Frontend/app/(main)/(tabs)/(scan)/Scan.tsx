@@ -1,3 +1,5 @@
+"use client";
+
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useState, useRef } from "react";
 import {
@@ -6,10 +8,13 @@ import {
   View,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { COLOR_CONST } from "@/constants/color";
 import ScannedProductsList from "./Cart";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { checkProductForAllergens } from "@/constants/allergens";
 
 const API_URL = "https://trackapi.nutritionix.com/v2/search/item/?upc=";
 const API_HEADERS = {
@@ -28,7 +33,7 @@ export default function Scan() {
   // **Handle Manual Permission Request**
   const handlePermissionRequest = async () => {
     const result = await requestPermission();
-    console.log("Permission result:", result);
+    // console.log("Permission result:", result);
   };
 
   // **Show Permission Request UI if Not Granted**
@@ -67,10 +72,55 @@ export default function Scan() {
       setLoading(false);
       setCameraActive(false);
 
-      // Navigate to Product Details Screen
+      // Check for allergens before navigating
+      const userAllergiesJson = await AsyncStorage.getItem("@user_allergies");
+      if (userAllergiesJson) {
+        const userAllergies = JSON.parse(userAllergiesJson);
+
+        if (
+          userAllergies &&
+          userAllergies.length > 0 &&
+          productData.foods &&
+          productData.foods[0] &&
+          productData.foods[0].nf_ingredient_statement
+        ) {
+          const foundAllergens = checkProductForAllergens(
+            productData.foods[0].nf_ingredient_statement,
+            userAllergies
+          );
+
+          if (foundAllergens.length > 0) {
+            // Show allergen warning but continue to product details
+            Alert.alert(
+              "Allergen Warning!",
+              `This product contains ${foundAllergens.join(
+                ", "
+              )}, which you've listed as an allergen.`,
+              [
+                {
+                  text: "View Details",
+                  onPress: () => {
+                    // Navigate to Product Details Screen
+                    router.push({
+                      pathname: "/(main)/productDetails",
+                      params: {
+                        data: JSON.stringify(productData),
+                        source: "scanner",
+                      },
+                    });
+                  },
+                },
+              ]
+            );
+            return;
+          }
+        }
+      }
+
+      // Navigate to Product Details Screen if no allergens found
       router.push({
-        pathname: "/(main)/(tabs)/(scan)/productDetails",
-        params: { data: JSON.stringify(productData) },
+        pathname: "/(main)/productDetails",
+        params: { data: JSON.stringify(productData), source: "scanner" },
       });
     } catch (error) {
       setLoading(false);

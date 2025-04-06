@@ -1,3 +1,5 @@
+"use client";
+
 import {
   FlatList,
   StyleSheet,
@@ -18,6 +20,7 @@ import {
 } from "react-native-gesture-handler";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 // Define the product type
 export type ScannedProduct = {
@@ -28,6 +31,8 @@ export type ScannedProduct = {
   imageUrl: string;
   data: string;
   quantity: number;
+  available_quantity: number; // Add this field
+  expiryDate?: string | null;
 };
 
 type ScannedProductsListProps = {
@@ -61,7 +66,7 @@ export default function Cart({ onScanPress }: ScannedProductsListProps) {
       // Extract numeric value from calories string (e.g., "120 kcal" -> 120)
       const caloriesMatch = product.calories.match(/(\d+)/);
       if (caloriesMatch && caloriesMatch[1]) {
-        const caloriesValue = parseInt(caloriesMatch[1], 10);
+        const caloriesValue = Number.parseInt(caloriesMatch[1], 10);
         return total + caloriesValue * product.quantity;
       }
       return total;
@@ -71,7 +76,7 @@ export default function Cart({ onScanPress }: ScannedProductsListProps) {
   const handleProductPress = useCallback(
     (productData: string) => {
       router.push({
-        pathname: "/(main)/(tabs)/(scan)/productDetails",
+        pathname: "/(main)/productDetails",
         params: { data: productData },
       });
     },
@@ -189,6 +194,18 @@ export default function Cart({ onScanPress }: ScannedProductsListProps) {
               <Text style={styles.productCalories}>{item.calories}</Text>
               <Text style={styles.productQuantity}>Qty: {item.quantity}</Text>
             </View>
+            {item.expiryDate && (
+              <View style={styles.expiryContainer}>
+                <MaterialCommunityIcons
+                  name="calendar-clock"
+                  size={14}
+                  color={COLOR_CONST.light_green}
+                />
+                <Text style={styles.expiryText}>
+                  Expires: {new Date(item.expiryDate).toLocaleDateString()}
+                </Text>
+              </View>
+            )}
           </View>
           <Feather name="chevron-right" size={24} color="#888" />
         </Pressable>
@@ -435,269 +452,14 @@ const styles = StyleSheet.create({
     color: COLOR_CONST.light_green,
     fontWeight: "500",
   },
+  expiryContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+  },
+  expiryText: {
+    fontSize: 12,
+    color: COLOR_CONST.light_green,
+    marginLeft: 4,
+  },
 });
-
-// import {
-//   FlatList,
-//   StyleSheet,
-//   Text,
-//   View,
-//   TouchableOpacity,
-//   Image,
-//   SafeAreaView,
-//   Alert,
-// } from "react-native";
-// import { useRouter } from "expo-router";
-// import { COLOR_CONST } from "@/constants/color";
-// import { Feather } from "@expo/vector-icons";
-// import {
-//   Swipeable,
-//   GestureHandlerRootView,
-// } from "react-native-gesture-handler";
-// import AsyncStorage from "@react-native-async-storage/async-storage";
-// import { useCallback, useEffect, useState } from "react";
-
-// type ScannedProduct = {
-//   id: string;
-//   name: string;
-//   image: string;
-//   quantity: number;
-//   price: number;
-// };
-
-// type ScannedProductsListProps = {
-//   onScanPress: () => void;
-// };
-
-// export default function Cart({ onScanPress }: ScannedProductsListProps) {
-//   const [products, setProducts] = useState<ScannedProduct[]>([]);
-//   const router = useRouter();
-
-//   const fetchProducts = useCallback(async () => {
-//     try {
-//       const jsonValue = await AsyncStorage.getItem("@scanned_products");
-//       if (jsonValue !== null) {
-//         setProducts(JSON.parse(jsonValue));
-//       }
-//     } catch (e) {
-//       console.error("Error fetching products:", e);
-//     }
-//   }, []);
-
-//   useEffect(() => {
-//     fetchProducts();
-//   }, [fetchProducts]);
-
-//   const renderItem = ({ item }: { item: ScannedProduct }) => (
-//     <Swipeable renderRightActions={() => <></>}>
-//       <View style={styles.itemContainer}>
-//         <Image source={{ uri: item.image }} style={styles.itemImage} />
-//         <View style={styles.itemDetails}>
-//           <Text style={styles.itemName}>{item.name}</Text>
-//           <Text style={styles.itemQuantity}>
-//             Quantity: {item.quantity} x ${item.price}
-//           </Text>
-//         </View>
-//       </View>
-//     </Swipeable>
-//   );
-
-//   const handleClearCart = () => {
-//     Alert.alert("Clear Cart", "Are you sure you want to clear all items?", [
-//       { text: "Cancel", style: "cancel" },
-//       {
-//         text: "Clear",
-//         style: "destructive",
-//         onPress: async () => {
-//           try {
-//             await AsyncStorage.setItem("@scanned_products", JSON.stringify([]));
-//             setProducts([]);
-//           } catch (error) {
-//             console.error("Error clearing cart:", error);
-//             Alert.alert("Error", "Failed to clear cart. Please try again.");
-//           }
-//         },
-//       },
-//     ]);
-//   };
-
-//   const handleConfirm = () => {
-//     if (products.length === 0) {
-//       Alert.alert("Error", "Your cart is empty!");
-//       return;
-//     }
-//     router.push("/(main)/(tabs)/(scan)/ConfirmPurchase");
-//   };
-
-//   return (
-//     <GestureHandlerRootView style={{ flex: 1 }}>
-//       <SafeAreaView style={styles.container}>
-//         {products.length !== 0 && (
-//           <View style={styles.header}>
-//             <Text style={styles.title}>Cart</Text>
-//             <TouchableOpacity
-//               style={styles.clearButton}
-//               onPress={handleClearCart}
-//             >
-//               <Feather name="trash-2" size={20} color="#ff4d4f" />
-//               <Text style={styles.clearButtonText}>Clear</Text>
-//             </TouchableOpacity>
-//           </View>
-//         )}
-
-//         {products.length === 0 ? (
-//           <View style={styles.emptyContainer}>
-//             <Text style={styles.emptyText}>Your cart is empty</Text>
-//             <TouchableOpacity
-//               style={styles.scanButtonInList}
-//               onPress={onScanPress}
-//             >
-//               <Text style={styles.scanButtonText}>Scan Your First Product</Text>
-//             </TouchableOpacity>
-//           </View>
-//         ) : (
-//           <>
-//             <FlatList
-//               data={products}
-//               keyExtractor={(item) => item.id}
-//               renderItem={renderItem}
-//               contentContainerStyle={styles.listContent}
-//             />
-
-//             <View style={styles.bottomButtons}>
-//               <TouchableOpacity
-//                 style={styles.confirmButton}
-//                 onPress={handleConfirm}
-//               >
-//                 <Text style={styles.confirmButtonText}>Confirm Purchase</Text>
-//               </TouchableOpacity>
-//             </View>
-//           </>
-//         )}
-
-//         {/* Floating Action Button */}
-//         {products.length !== 0 && (
-//           <TouchableOpacity style={styles.fab} onPress={onScanPress}>
-//             <Feather name="camera" size={24} color="white" />
-//             <Text style={styles.fabText}>Scan</Text>
-//           </TouchableOpacity>
-//         )}
-//       </SafeAreaView>
-//     </GestureHandlerRootView>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: "#fff",
-//   },
-//   emptyContainer: {
-//     flex: 1,
-//     justifyContent: "center",
-//     alignItems: "center",
-//   },
-//   emptyText: {
-//     fontSize: 18,
-//     marginBottom: 20,
-//   },
-//   scanButtonInList: {
-//     backgroundColor: COLOR_CONST.light_green,
-//     padding: 15,
-//     borderRadius: 10,
-//   },
-//   scanButtonText: {
-//     color: "white",
-//     fontSize: 16,
-//     fontWeight: "bold",
-//   },
-//   listContent: {
-//     paddingHorizontal: 16,
-//   },
-//   itemContainer: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//     marginBottom: 10,
-//     padding: 10,
-//     borderRadius: 8,
-//     backgroundColor: "#f2f2f2",
-//   },
-//   itemImage: {
-//     width: 80,
-//     height: 80,
-//     marginRight: 10,
-//     borderRadius: 8,
-//   },
-//   itemDetails: {
-//     flex: 1,
-//   },
-//   itemName: {
-//     fontSize: 16,
-//     fontWeight: "bold",
-//   },
-//   itemQuantity: {
-//     fontSize: 14,
-//     color: "#888",
-//   },
-//   fab: {
-//     position: "absolute",
-//     bottom: 30,
-//     right: 30,
-//     backgroundColor: COLOR_CONST.light_green,
-//     padding: 15,
-//     borderRadius: 50,
-//     flexDirection: "row",
-//     alignItems: "center",
-//   },
-//   fabText: {
-//     color: "white",
-//     marginLeft: 10,
-//     fontSize: 16,
-//     fontWeight: "bold",
-//   },
-//   header: {
-//     flexDirection: "row",
-//     justifyContent: "space-between",
-//     alignItems: "center",
-//     paddingRight: 16,
-//     paddingTop: 16,
-//     paddingLeft: 16,
-//   },
-//   clearButton: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//     padding: 8,
-//   },
-//   clearButtonText: {
-//     color: "#ff4d4f",
-//     marginLeft: 4,
-//     fontSize: 16,
-//     fontWeight: "500",
-//   },
-//   bottomButtons: {
-//     position: "absolute",
-//     bottom: 0,
-//     left: 0,
-//     right: 0,
-//     padding: 16,
-//     backgroundColor: "white",
-//     borderTopWidth: 1,
-//     borderTopColor: "#eee",
-//     paddingBottom: 34,
-//   },
-//   confirmButton: {
-//     backgroundColor: COLOR_CONST.light_green,
-//     padding: 16,
-//     borderRadius: 12,
-//     alignItems: "center",
-//   },
-//   confirmButtonText: {
-//     color: "white",
-//     fontSize: 16,
-//     fontWeight: "bold",
-//   },
-//   title: {
-//     fontSize: 24,
-//     fontWeight: "bold",
-//   },
-// });
