@@ -1,20 +1,35 @@
-exports.filterValidRecipes = (recipes, availableIngredients) => {
-  const productSet = new Set(availableIngredients.map((i) => i.toLowerCase()));
+exports.filterValidRecipes = (recipes) => {
   const validRecipes = [];
 
   for (let recipe of recipes) {
-    const required = recipe.ingredients_required.map((i) => i.toLowerCase());
-    const matched = required.filter((i) => productSet.has(i));
-    const matchPercent = (matched.length / required.length) * 100;
-
-    // if (matchPercent >= 80) {
-    validRecipes.push({
-      ...recipe,
-      user_has: matched,
-      user_missing: required.filter((i) => !productSet.has(i)),
-      match_percent: Math.round(matchPercent),
+    // Create the updated ingredients array with just the ingredient names
+    const updatedIngredients = recipe.ingredients_required.map((ingredient) => {
+      return ingredient.name;
     });
-    // }
+
+    const user_has =
+      recipe.ingredients_required
+        .filter((ingredient) => ingredient.isPresent)
+        .map((ing) => ing.name) ?? [];
+    const user_missing =
+      recipe.ingredients_required
+        .filter((ingredient) => !ingredient.isPresent)
+        .map((ing) => ing.name) ?? [];
+
+    // Push the valid recipe to the list
+    validRecipes.push({
+      name: recipe.name,
+      brand: recipe.brand,
+      description: recipe.description,
+      ingredients_required: updatedIngredients,
+      instructions: recipe.instructions,
+      time_to_make: recipe.time_to_make,
+      estimated_calories: recipe.estimated_calories,
+      imageUrl: recipe.imageUrl,
+      match_percent: Math.round(recipe.match_percent),
+      user_has,
+      user_missing,
+    });
   }
 
   return validRecipes;

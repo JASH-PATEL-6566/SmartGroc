@@ -8,7 +8,6 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
-  ActivityIndicator,
   SafeAreaView,
   RefreshControl,
   Alert,
@@ -18,10 +17,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { COLOR_CONST } from "@/constants/color";
 import { MaterialCommunityIcons, Feather } from "@expo/vector-icons";
 import LottieView from "lottie-react-native";
+import SafeAreaViewBackground from "@/components/SafeAreaViewBackground";
 
 // Replace the dynamic import with a regular import at the top of the file
 import { fetchRecipes as fetchRecipesFromService } from "@/utils/recipeService";
-import { RootState } from "@/redux/store";
+import type { RootState } from "@/redux/store";
 import { useSelector } from "react-redux";
 
 type Recipe = {
@@ -43,83 +43,130 @@ type RecipeResponse = {
   recipes: Recipe[];
 };
 
+const RECIPES_STORAGE_KEY = "@cached_recipes";
+
 export default function RecipesScreen() {
   const router = useRouter();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [recipeSuggestionsEnabled, setRecipeSuggestionsEnabled] =
+    useState(false);
   const { uid } = useSelector((state: RootState) => state.auth.user);
 
+  // Check if recipe suggestions are enabled
   useEffect(() => {
-    loadRecipes();
-  }, []);
+    const checkRecipeSuggestions = async () => {
+      try {
+        const userPrefs = await AsyncStorage.getItem("@user_preferences");
+        if (userPrefs) {
+          const prefs = JSON.parse(userPrefs);
+          const enabled = prefs.recipeSuggestions || false;
+          setRecipeSuggestionsEnabled(enabled);
 
-  const loadRecipes = async () => {
+          if (!enabled) {
+            Alert.alert(
+              "Recipe Suggestions Disabled",
+              "Recipe suggestions are currently disabled. You can enable them in your profile settings.",
+              [
+                {
+                  text: "Go to Settings",
+                  onPress: () => router.push("/(main)/(tabs)/profile"),
+                },
+              ],
+              { cancelable: false }
+            );
+          } else {
+            // Only load cached recipes initially, not from API
+            loadCachedRecipes();
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load user preferences", error);
+        loadCachedRecipes();
+      }
+    };
+
+    checkRecipeSuggestions();
+  }, [router]);
+
+  // Load recipes from AsyncStorage
+  const loadCachedRecipes = async () => {
     try {
-      await fetchRecipes();
+      setLoading(true);
+      const cachedRecipes = await AsyncStorage.getItem(RECIPES_STORAGE_KEY);
+
+      if (cachedRecipes) {
+        const parsedRecipes = JSON.parse(cachedRecipes);
+        setRecipes(parsedRecipes);
+        console.log("Loaded recipes from cache:", parsedRecipes.length);
+      } else {
+        // If no cached recipes, set empty array
+        setRecipes([]);
+        console.log("No cached recipes found");
+      }
     } catch (error) {
-      console.error("Error loading recipes:", error);
-      Alert.alert("Error", "Failed to load recipes");
+      console.error("Error loading cached recipes:", error);
+      setRecipes([]);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
-  // Update the fetchRecipes function to handle the null uid case
-  const fetchRecipes = async () => {
+  // Save recipes to AsyncStorage
+  const cacheRecipes = async (recipesToCache: Recipe[]) => {
     try {
-      setLoading(true);
+      await AsyncStorage.setItem(
+        RECIPES_STORAGE_KEY,
+        JSON.stringify(recipesToCache)
+      );
+      console.log("Cached", recipesToCache.length, "recipes");
+    } catch (error) {
+      console.error("Error caching recipes:", error);
+    }
+  };
+
+  // Fetch fresh recipes from API
+  const fetchFreshRecipes = async () => {
+    try {
+      setRefreshing(true);
+      console.log("Fetching fresh recipes from API...");
 
       // Handle the case where uid might be null
       const data = await fetchRecipesFromService(uid || "");
 
       // Update state with the recipes
       if (data && data.recipes) {
-        setRecipes(data.recipes || []);
+        const newRecipes = data.recipes || [];
+        setRecipes(newRecipes);
+
+        // Cache the new recipes
+        await cacheRecipes(newRecipes);
+
+        console.log(
+          "Successfully fetched and cached",
+          newRecipes.length,
+          "recipes"
+        );
       } else {
         // Ensure recipes is set to an empty array if no data is returned
         setRecipes([]);
+        console.log("No recipes returned from API");
       }
 
       return data;
     } catch (error) {
-      console.error("Error fetching recipes:", error);
+      console.error("Error fetching fresh recipes:", error);
       // Set recipes to empty array when there's an error
-      setRecipes([]);
       Alert.alert("Error", "Failed to fetch recipes");
       return null;
     } finally {
-      setLoading(false);
       setRefreshing(false);
     }
   };
 
-  const getAvailableProducts = async () => {
-    try {
-      // Get products from AsyncStorage
-      const scannedProducts = await AsyncStorage.getItem("@scanned_products");
-      let availableProducts = [];
-
-      if (scannedProducts) {
-        const parsedProducts = JSON.parse(scannedProducts);
-        availableProducts = parsedProducts.filter(
-          (product: any) => product.available_quantity > 0
-        );
-      }
-
-      // Get products from Firestore (this would need to be implemented)
-      // For now, we'll just return the scanned products
-      return availableProducts;
-    } catch (error) {
-      console.error("Error getting available products:", error);
-      return [];
-    }
-  };
-
   const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchRecipes();
+    await fetchFreshRecipes();
   };
 
   const handleRecipePress = (recipe: Recipe) => {
@@ -170,6 +217,29 @@ export default function RecipesScreen() {
     </TouchableOpacity>
   );
 
+  // If recipe suggestions are disabled, show disabled message
+  if (!recipeSuggestionsEnabled) {
+    return (
+      <SafeAreaViewBackground>
+        <View style={styles.disabledContainer}>
+          <MaterialCommunityIcons name="food-off" size={80} color="#ccc" />
+          <Text style={styles.disabledText}>
+            Recipe suggestions are disabled
+          </Text>
+          <Text style={styles.disabledSubtext}>
+            You can enable them in your profile settings
+          </Text>
+          <TouchableOpacity
+            style={styles.enableButton}
+            onPress={() => router.push("/(main)/(tabs)/profile")}
+          >
+            <Text style={styles.enableButtonText}>Go to Settings</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaViewBackground>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -191,27 +261,36 @@ export default function RecipesScreen() {
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          {/* <ActivityIndicator size="large" color={COLOR_CONST.light_green} /> */}
           <LottieView
-            source={require("../../assets/cooking.json")} // Path to your Lottie animation JSON file
+            source={require("../../assets/cooking.json")}
             autoPlay
             loop
             style={styles.lottie}
           />
-          <Text style={styles.loadingText}>SmartGroc is thinking.....</Text>
+          <Text style={styles.loadingText}>Loading recipes...</Text>
+        </View>
+      ) : refreshing ? (
+        <View style={styles.loadingContainer}>
+          <LottieView
+            source={require("../../assets/cooking.json")}
+            autoPlay
+            loop
+            style={styles.lottie}
+          />
+          <Text style={styles.loadingText}>SmartGroc is thinking...</Text>
         </View>
       ) : recipes.length === 0 ? (
         <View style={styles.emptyContainer}>
           <MaterialCommunityIcons name="food-off" size={64} color="#888" />
           <Text style={styles.emptyText}>No recipes available</Text>
           <Text style={styles.emptySubtext}>
-            Unable to fetch recipes at this time
+            Tap refresh to generate recipe suggestions
           </Text>
           <TouchableOpacity
             style={styles.refreshButtonLarge}
             onPress={handleRefresh}
           >
-            <Text style={styles.refreshButtonText}>Try Again</Text>
+            <Text style={styles.refreshButtonText}>Generate Recipes</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -365,5 +444,35 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 12,
     fontWeight: "bold",
+  },
+  disabledContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  disabledText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginTop: 20,
+    textAlign: "center",
+  },
+  disabledSubtext: {
+    fontSize: 16,
+    color: "#666",
+    marginTop: 10,
+    textAlign: "center",
+  },
+  enableButton: {
+    marginTop: 30,
+    backgroundColor: COLOR_CONST.light_green,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  enableButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });

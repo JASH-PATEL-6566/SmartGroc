@@ -6,7 +6,6 @@ const openai = new OpenAI({
 });
 
 exports.getRecipesFromOpenAI = async (ingredients) => {
-
   // Directly use the ingredient names (as the array contains strings)
   const ingredientList = ingredients.join(", ");
 
