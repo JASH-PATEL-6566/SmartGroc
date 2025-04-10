@@ -70,6 +70,11 @@ export default function InventoryList() {
       if (savedProducts) {
         const parsedProducts = JSON.parse(savedProducts);
         parsedProducts.forEach((product: any) => {
+          // Skip products with available_quantity of 0
+          if (product.available_quantity === 0) {
+            return;
+          }
+
           scannedProducts.push({
             ...product,
             source: "scanned",
@@ -112,6 +117,12 @@ export default function InventoryList() {
 
           productsSnapshot.docs.forEach((productDoc) => {
             const productData = productDoc.data();
+
+            // Skip products with available_quantity of 0
+            if (productData.available_quantity === 0) {
+              return;
+            }
+
             purchasedProducts.push({
               id: productDoc.id,
               name: productData.name || "Unknown Product",
@@ -239,6 +250,96 @@ export default function InventoryList() {
 
   // Update the updateQuantity function to handle available_quantity
   const updateQuantity = async (id: string, newQuantity: number) => {
+    // If quantity is 0, ask user if they want to remove the product
+    if (newQuantity === 0) {
+      Alert.alert(
+        "Remove Product",
+        "Do you want to remove this product from your inventory?",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Remove",
+            style: "destructive",
+            onPress: async () => {
+              try {
+                // Find the product
+                const productToUpdate = products.find((p) => p.id === id);
+
+                if (!productToUpdate) return;
+
+                // For scanned products, remove from AsyncStorage
+                if (productToUpdate.source === "scanned") {
+                  const scannedProducts = await AsyncStorage.getItem(
+                    "@scanned_products"
+                  );
+                  if (scannedProducts) {
+                    const parsedProducts = JSON.parse(scannedProducts);
+
+                    // Filter out all instances of this product
+                    const updatedScannedProducts = parsedProducts.filter(
+                      (product: any) => {
+                        return !productToUpdate.instances?.some(
+                          (instance) => instance.id === product.id
+                        );
+                      }
+                    );
+
+                    // Update AsyncStorage
+                    await AsyncStorage.setItem(
+                      "@scanned_products",
+                      JSON.stringify(updatedScannedProducts)
+                    );
+                  }
+                } else if (productToUpdate.source === "purchased" && uid) {
+                  // For purchased products, update Firestore
+                  // We need to update all instances of this product
+                  for (const instance of productToUpdate.instances || []) {
+                    if (instance.purchaseId) {
+                      const productRef = doc(
+                        db,
+                        "users",
+                        uid,
+                        "purchase",
+                        instance.purchaseId,
+                        "products",
+                        instance.id
+                      );
+
+                      await updateDoc(productRef, {
+                        available_quantity: 0,
+                      });
+                    }
+                  }
+                }
+
+                // Remove product from state
+                const updatedProducts = products.filter(
+                  (product) => product.id !== id
+                );
+                setProducts(updatedProducts);
+                setFilteredProducts(
+                  updatedProducts.filter(
+                    (product) =>
+                      searchQuery.trim() === "" ||
+                      product.name
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase()) ||
+                      product.brand
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase())
+                  )
+                );
+              } catch (error) {
+                console.error("Error removing product:", error);
+                Alert.alert("Error", "Failed to remove product");
+              }
+            },
+          },
+        ]
+      );
+      return;
+    }
+
     if (newQuantity < 0) return;
 
     try {

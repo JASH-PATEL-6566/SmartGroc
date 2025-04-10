@@ -53,6 +53,11 @@ export default function ExpiringProducts() {
       if (savedProducts) {
         const parsedProducts = JSON.parse(savedProducts);
         parsedProducts.forEach((product: any) => {
+          // Skip products with available_quantity of 0
+          if (product.available_quantity === 0) {
+            return;
+          }
+
           if (product.expiryDate) {
             const daysUntilExpiry = getDaysUntilExpiry(product.expiryDate);
             if (
@@ -91,6 +96,12 @@ export default function ExpiringProducts() {
 
           productsSnapshot.docs.forEach((productDoc) => {
             const productData = productDoc.data();
+
+            // Skip products with available_quantity of 0
+            if (productData.available_quantity === 0) {
+              return;
+            }
+
             if (productData.expiryDate) {
               const daysUntilExpiry = getDaysUntilExpiry(
                 productData.expiryDate

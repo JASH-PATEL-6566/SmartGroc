@@ -10,6 +10,8 @@ export default function MainStack() {
       <Stack.Screen name="expiringProducts" />
       <Stack.Screen name="productDetails" options={{ presentation: "modal" }} />
       <Stack.Screen name="shopping-lists" options={{ headerShown: false }} />
+      <Stack.Screen name="recipes" options={{ headerShown: false }} />
+      <Stack.Screen name="recipeDetail" options={{ headerShown: false }} />
     </Stack>
   );
 }

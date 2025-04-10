@@ -1,0 +1,17 @@
+{
+    "products": [
+      {
+        "name": "Dairy Milk Mini Eggs",
+        "nf_ingredient_statement": "Eggs"
+      },
+      {
+        "name": "Pasta",
+        "nf_ingredient_statement": "Pasta"
+      },
+      {
+        "name": "Tomato Sauce",
+        "nf_ingredient_statement": "Tomato Sauce"
+      }
+    ]
+  }
+  

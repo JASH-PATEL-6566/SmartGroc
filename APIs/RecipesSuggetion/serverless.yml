@@ -1,0 +1,26 @@
+service: recipe-ai-api
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  environment:
+    OPENAI_API_KEY: ${env:OPENAI_API_KEY}
+
+functions:
+  getRecipes:
+    handler: handlers/recipeHandler.handler
+    timeout: 30
+    events:
+      - http:
+          path: recipes
+          method: post
+
+plugins:
+  - serverless-offline
+
+custom:
+  serverless-offline:
+    httpPort: 5001
+    lambdaPort: 5002
+    timeout: 100
