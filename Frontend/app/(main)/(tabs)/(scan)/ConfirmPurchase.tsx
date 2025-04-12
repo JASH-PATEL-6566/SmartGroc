@@ -242,11 +242,59 @@ export default function ConfirmOrder() {
     }
   };
 
+  // const extractGrandTotal = async (imageUri: string) => {
+  //   setIsLoading(true);
+  //   try {
+  //     // For now, just set a default value
+  //     setGrandTotal("2.5");
+  //   } catch (error) {
+  //     console.error("Error extracting grand total:", error);
+  //     Alert.alert(
+  //       "Manual Entry Required",
+  //       "Could not extract grand total. Please enter it manually."
+  //     );
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
   const extractGrandTotal = async (imageUri: string) => {
     setIsLoading(true);
     try {
-      // For now, just set a default value
-      setGrandTotal("2.5");
+      const formData = new FormData();
+
+      // Create the file object with the correct type
+      const fileToUpload = {
+        uri: imageUri,
+        type: "image/jpeg",
+        name: "receipt.jpg",
+      } as unknown as Blob;
+
+      // Append to FormData
+      formData.append("file", fileToUpload);
+
+      const response = await fetch(
+        "http://142.68.132.38:5001/extract_receipt_data",
+        {
+          method: "POST",
+          body: formData,
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      const data = await response.json();
+      console.log(data);
+
+      if (data.total_amount) {
+        setGrandTotal(data.total_amount.toString());
+      } else {
+        Alert.alert(
+          "Manual Entry Required",
+          "Could not extract grand total. Please enter it manually."
+        );
+      }
     } catch (error) {
       console.error("Error extracting grand total:", error);
       Alert.alert(

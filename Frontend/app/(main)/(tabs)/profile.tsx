@@ -193,6 +193,7 @@ const DietaryTag: React.FC<DietaryTagProps> = ({ label, onRemove }) => (
 
 // Then update the Profile component to use this function
 export default function Profile() {
+  const user = useSelector((state: RootState) => state.auth.user);
   const [expireAlerts, setExpireAlerts] = useState<boolean>(true);
   const [recipeSuggestions, setRecipeSuggestions] = useState<boolean>(false);
   const [showInput, setShowInput] = useState<boolean>(false);
@@ -646,8 +647,8 @@ export default function Profile() {
             </TouchableOpacity>
           </View>
           <View style={styles.profileInfo}>
-            <Text style={styles.name}>John Doe</Text>
-            <Text style={styles.email}>john.doe@example.com</Text>
+            <Text style={styles.name}>{user.displayName}</Text>
+            <Text style={styles.email}>{user.email}</Text>
           </View>
         </View>
 
@@ -937,6 +938,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "700",
     marginBottom: 4,
+    textTransform: "capitalize",
   },
   email: {
     fontSize: 14,

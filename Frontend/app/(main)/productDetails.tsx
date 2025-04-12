@@ -26,6 +26,7 @@ import { NUTRIENT_MAP } from "@/constants/nutritions";
 import DateTimePicker from "@react-native-community/datetimepicker";
 // Add this import at the top of the file
 import { checkProductForAllergens } from "@/constants/allergens";
+import { DatePicker } from "@/components/DatePicker";
 
 const { width } = Dimensions.get("window");
 
@@ -42,6 +43,10 @@ export default function ProductDetails() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   // Add this to track if we're coming from scanner or elsewhere
   const isFromScanner = source === "scanner" || !source;
+  // Add a state to track if the picker is for month only (iOS)
+  const [datePickerMode, setDatePickerMode] = useState<"date" | "month">(
+    "month"
+  );
 
   // Add this function inside the ProductDetails component, before the return statement
   const checkForAllergens = async (ingredients: string | undefined) => {
@@ -152,6 +157,7 @@ export default function ProductDetails() {
     setQuantityModalVisible(true);
   };
 
+  // Updated handleDateChange to handle month-year selection better
   const handleDateChange = (event: any, selectedDate?: Date) => {
     // For Android, hide the picker immediately
     if (Platform.OS === "android") {
@@ -160,16 +166,19 @@ export default function ProductDetails() {
 
     // Only update the date if a date was actually selected
     if (selectedDate) {
-      setExpiryDate(selectedDate);
+      // Set the day to the 1st of the selected month to ensure we're only tracking month/year
+      const firstOfMonth = new Date(selectedDate);
+      firstOfMonth.setDate(1);
+      setExpiryDate(firstOfMonth);
     }
   };
 
+  // Format date to show only month and year
   const formatDate = (date: Date | null) => {
     if (!date) return "Not set";
     return date.toLocaleDateString("en-US", {
       year: "numeric",
-      month: "short",
-      day: "numeric",
+      month: "long",
     });
   };
 
@@ -503,61 +512,14 @@ export default function ProductDetails() {
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Expiry Date</Text>
-                  <TouchableOpacity
-                    style={styles.datePickerButton}
-                    onPress={() => setShowDatePicker(true)}
-                  >
-                    <Text
-                      style={[
-                        styles.datePickerButtonText,
-                        expiryDate ? { color: "#333" } : { color: "#666" },
-                      ]}
-                    >
-                      {expiryDate
-                        ? formatDate(expiryDate)
-                        : "Select Expiry Date"}
-                    </Text>
-                    <Feather
-                      name="calendar"
-                      size={20}
-                      color={COLOR_CONST.light_green}
-                    />
-                  </TouchableOpacity>
+                  <Text style={styles.inputLabel}>Expiry Month</Text>
+                  <DatePicker
+                    value={expiryDate}
+                    onChange={setExpiryDate}
+                    label="Expiry Date"
+                  />
                 </View>
 
-                {/* iOS date picker */}
-                {Platform.OS === "ios" && showDatePicker && (
-                  <View style={styles.datePickerContainer}>
-                    <DateTimePicker
-                      value={expiryDate || new Date()}
-                      mode="date"
-                      display="spinner"
-                      onChange={handleDateChange}
-                      minimumDate={new Date()}
-                      style={styles.datePicker}
-                    />
-                    <TouchableOpacity
-                      style={styles.datePickerDoneButton}
-                      onPress={() => setShowDatePicker(false)}
-                    >
-                      <Text style={styles.datePickerDoneText}>Done</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-
-                {/* Android date picker - shown as modal */}
-                {Platform.OS === "android" && showDatePicker && (
-                  <DateTimePicker
-                    value={expiryDate || new Date()}
-                    mode="date"
-                    display="default"
-                    onChange={handleDateChange}
-                    minimumDate={new Date()}
-                  />
-                )}
-
-                {/* Fix the modal buttons implementation */}
                 <View style={styles.modalButtons}>
                   <TouchableOpacity
                     style={[styles.modalButton, styles.modalButtonCancel]}
@@ -888,18 +850,26 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 
-  // Make sure the date picker container has proper styling
+  // Improved date picker container with better styling
   datePickerContainer: {
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "white",
     borderRadius: 8,
-    marginBottom: 16,
-    padding: 10,
+    marginTop: 8,
+    padding: 16,
     borderWidth: 1,
     borderColor: "#ddd",
     width: "100%",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   datePicker: {
-    height: 200,
     width: "100%",
   },
   datePickerDoneButton: {
@@ -908,7 +878,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 8,
-    marginTop: 8,
+    marginTop: 16,
   },
   datePickerDoneText: {
     color: "white",
