@@ -4,7 +4,7 @@
 
 ## 🚀 Demo
 
-[![Watch the video](https://drive.google.com/file/d/13bkZwXIgaPxfbtLupMl0ye6HbdCiO18a/view?usp=sharing)](https://drive.google.com/file/d/1M5Gwc-nvArUSQLG6zDrmSeVu9S-20Rbc/view?usp=sharing)
+[Watch the video](https://drive.google.com/file/d/1M5Gwc-nvArUSQLG6zDrmSeVu9S-20Rbc/view?usp=sharing)
 
 ## 👨‍🍳 Why SmartGroc?
 
