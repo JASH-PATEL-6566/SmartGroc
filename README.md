@@ -43,12 +43,6 @@ Managing groceries shouldn’t be a guessing game. SmartGroc empowers you to:
 - 🍽️ **Expiry-Based Recipes** – prioritize ingredients near expiration
 - 🥦 **Diet-Aware Meal Plans** – filter recipes for dietary needs
 
-## 📱 Platform Availability
-
-SmartGroc is being actively developed for release on:
-- ✅ iOS (App Store)
-- ✅ Android (Google Play Store)
-
 ---
 
 ## 🙌 Contributors
